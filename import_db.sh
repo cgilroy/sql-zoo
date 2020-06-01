@@ -1,5 +1,5 @@
-#!/usr/bin/env sh
 
-dropdb sqlzoo
-createdb sqlzoo
-psql sqlzoo < data/create_tables.sql
+
+dropdb -U postgres sqlzoo
+createdb -U postgres sqlzoo
+psql -U postgres sqlzoo < data/create_tables.sql
