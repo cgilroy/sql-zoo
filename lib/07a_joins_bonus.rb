@@ -133,6 +133,16 @@ def best_value
   # pence. Find the good value albums - show the title, the price and the number
   # of tracks.
   execute(<<-SQL)
+  SELECT
+    title, price, COUNT(song)
+  FROM
+    albums
+  JOIN
+    tracks ON tracks.album = albums.asin
+  GROUP BY
+    title,price
+  HAVING
+    price/COUNT(price) < 0.50
   SQL
 end
 
@@ -141,6 +151,18 @@ def top_track_counts
   # tracks. List the top 10 albums. Select both the album title and the track
   # count, and order by both track count and title (descending).
   execute(<<-SQL)
+  SELECT
+    title, COUNT(song)
+  FROM
+    albums
+  JOIN
+    tracks ON tracks.album = albums.asin
+  GROUP BY
+    title
+  ORDER BY
+    COUNT(song) DESC, title DESC
+  LIMIT 10
+  
   SQL
 end
 
@@ -148,6 +170,20 @@ def rock_superstars
   # Select the artist who has recorded the most rock albums, as well as the
   # number of albums. HINT: use LIKE '%Rock%' in your query.
   execute(<<-SQL)
+  SELECT
+    artist, COUNT(DISTINCT title)
+  FROM
+    albums
+  JOIN
+    styles ON styles.album = albums.asin
+  WHERE
+    style LIKE '%Rock%'
+  GROUP BY
+    artist
+  ORDER BY
+    COUNT(DISTINCT title) DESC
+  LIMIT
+    1
   SQL
 end
 
@@ -160,5 +196,25 @@ def expensive_tastes
   # subquery. Next, JOIN the styles table to this result and use aggregates to
   # determine the average price per track.
   execute(<<-SQL)
+  SELECT
+    style, (SUM(price)/SUM(track_count)) as avg_price
+  FROM
+    styles
+  JOIN
+    (
+      SELECT
+        title, price, asin, COUNT(tracks.album) as track_count
+      FROM
+        albums
+      JOIN
+        tracks ON tracks.album = albums.asin
+      GROUP BY
+        title, price, asin
+    ) as prices ON prices.asin = styles.album AND price IS NOT NULL
+  GROUP BY
+    style
+  ORDER BY
+    avg_price DESC, style
+  LIMIT 5
   SQL
 end
